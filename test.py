@@ -1,6 +1,7 @@
 import flask as fl
 
 app = fl.Flask(__name__)
+app.secret_key = "dev-secret-key"  # needed for session management
 
 name = "TEMP_USER"
 
@@ -26,11 +27,20 @@ def login():
     if fl.request.method == 'POST':
         #login submit
         if 'submit' in fl.request.form:
+            username = fl.request.form.get("username")
+            password = fl.request.form.get("password")
             
-            print(fl.request.form["username"], fl.request.form["password"])
-    
+            print(username, password)
+            if username:
+                fl.session['username'] = username
+                return fl.redirect(fl.url_for('dashboard'))
     #template
     return fl.render_template('login.html')
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard():
+    username = fl.session.get('username', 'TEMP_USER')
+    return fl.render_template('dashboard.html', person=username)
 
 @app.route('/create_class', methods=['GET', 'POST'])
 def createClass():
