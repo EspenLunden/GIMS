@@ -1,0 +1,61 @@
+<html>
+    <h1>Create a type of gear</h1>
+
+    <button type="button" onclick="window.location='/login'">Login</button>
+    <button type="button" onclick="window.location='/'">Back to Home</button>
+    <br><br>
+
+    <body> 
+        Name (required)<br>
+        ID (required)<br>
+        <form method="post" id="gearForm">
+            <input type="text" id="name" name="name" value="" placeholder="Name" required/><br><br>
+            <input type="number" id="id" name="id" value="" placeholder="ID" required/><br><br>
+            
+            <div id="dynamicFields">
+                <!-- Dynamic fields will be added here -->
+            </div>
+            
+            <button type="button" onclick="addField()">Add Field</button><br><br>
+            <input type="submit" name="submit" value="Submit"/>
+        </form>
+
+        <script>
+            function addField() {
+                const dynamicFields = document.getElementById('dynamicFields');
+                
+                // Create a container for the new field
+                const fieldContainer = document.createElement('div');
+                fieldContainer.style.marginBottom = '10px';
+
+                // Create the input for the variable name
+                const variableNameInput = document.createElement('input');
+                variableNameInput.type = 'text';
+                variableNameInput.name = 'variableName[]';
+                variableNameInput.placeholder = 'Variable Name';
+                variableNameInput.required = true;
+
+                // Create the dropdown for the variable type
+                const variableTypeSelect = document.createElement('select');
+                variableTypeSelect.name = 'variableType[]';
+                variableTypeSelect.required = true;
+
+                // Add options to the dropdown
+                const types = ['text', 'number', 'date', 'boolean'];
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                    variableTypeSelect.appendChild(option);
+                });
+
+                // Append the input and dropdown to the container
+                fieldContainer.appendChild(variableNameInput);
+                fieldContainer.appendChild(variableTypeSelect);
+
+                // Append the container to the dynamic fields section
+                dynamicFields.appendChild(fieldContainer);
+            }
+        </script>
+    </body>
+</html>

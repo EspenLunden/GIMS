@@ -31,3 +31,13 @@ def login():
     
     #template
     return fl.render_template('login.html')
+
+@app.route('/create_class', methods=['GET', 'POST'])
+def createClass():
+    #posts
+    
+    #template
+    return fl.render_template('createClass.html')
+
+if __name__ == '__main__':  
+   app.run(debug = True)
