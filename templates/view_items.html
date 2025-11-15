@@ -1,0 +1,23 @@
+<html>
+    <h1>View Gear Items</h1>
+
+    <button type="button" onclick="window.location='/'">Back to Home</button>
+    <button type="button" onclick="window.location.href='/add_gear'">Add Gear Item</button>
+    <br><br>
+
+    <body>
+        {% for class_name, items in gearItems.items() %}
+        <h3>{{ class_name }}</h3>
+        {% for item in items %}
+        {% for key, value in item.items() %}
+        {{ key }}: {{ value }}<br>
+        {% endfor %}
+        <br>
+        {% endfor %}
+        <br>
+        {% endfor %}
+        {% if not gearItems %}
+        <p>No gear items found.</p> 
+        {% endif %}
+    </body>
+</html>

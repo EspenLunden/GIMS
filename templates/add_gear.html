@@ -1,0 +1,20 @@
+<html>
+    <h1>Add Gear Item</h1>
+
+    <button type="button" onclick="window.location='/'">Back to Home</button>
+    <br><br>
+
+    <body>
+        <form method="post">
+            <label>Class:</label>
+            <select name="class_name" required>
+                <option value="">Select a Class</option>
+                {% for class_name in userClasses.keys() %}
+                <option value="{{ class_name }}">{{ class_name }}</option>
+                {% endfor %}
+            </select>
+            <br><br>
+            <input type="submit" name="submit" value="Add Item"/>
+        </form>
+    </body>
+</html>

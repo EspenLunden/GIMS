@@ -26,6 +26,11 @@ def login():
     #template
     return fl.render_template('login.html')
 
+@app.route('/logout')
+def logout():
+    fl.session.clear()
+    return fl.redirect(fl.url_for('login'))
+
 @app.route('/', methods=['GET', 'POST'])
 def dashboard():
     username = fl.session.get('username', 'TEMP_USER')
@@ -164,6 +169,17 @@ def addGear():
 
     # GET -> render form
     return fl.render_template('add_gear.html', userClasses=userClasses)
+
+@app.route('/view_items', methods=['GET'])
+def viewItems():
+    # load gear items
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+    
+    return fl.render_template('view_items.html', gearItems=gearItems, userClasses=userClasses)
 
 if __name__ == '__main__':
    # load user classes if file exists
