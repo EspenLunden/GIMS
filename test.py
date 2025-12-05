@@ -143,6 +143,11 @@ def addGear():
 
         # assign ID if not provided by user
         if provided_id:
+            # Check if ID already exists
+            existing_ids = [it.get('ID') for it in gearItems.get(className, [])]
+            if provided_id in existing_ids or str(provided_id) in [str(x) for x in existing_ids]:
+                print(f"Item with ID {provided_id} already exists in {className}")
+                return fl.redirect(fl.url_for('addGear'))
             item_id = provided_id
             item['ID'] = item_id
         else:
@@ -164,6 +169,74 @@ def addGear():
 
     # GET -> render form
     return fl.render_template('add_gear.html', userClasses=userClasses)
+
+
+@app.route('/edit_gear', methods=['GET', 'POST'])
+def editGear():
+    # load existing gear items
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+
+    if fl.request.method == 'POST':
+        className = fl.request.form.get('class_name')
+        item_id = fl.request.form.get('item_id')
+        
+        if not className or className not in userClasses or className not in gearItems:
+            print('Invalid class selected')
+            return fl.redirect(fl.url_for('editGear'))
+
+        # Find the item to edit
+        item_index = None
+        for idx, item in enumerate(gearItems[className]):
+            if str(item.get('ID')) == str(item_id):
+                item_index = idx
+                break
+        
+        if item_index is None:
+            print('Item not found')
+            return fl.redirect(fl.url_for('editGear'))
+
+        fields = userClasses[className].get('fields', [])
+        updated_item = {}
+
+        # Read updated values from form
+        for i, field in enumerate(fields):
+            name_key = f'fieldname_{i}'
+            val_key = f'field_{i}'
+            field_name = fl.request.form.get(name_key)
+
+            # booleans are checkboxes, present only when checked
+            if field.get('type') == 'boolean':
+                value = True if fl.request.form.get(val_key) else False
+            else:
+                value = fl.request.form.get(val_key)
+
+            # convert numbers when possible
+            if field.get('type') == 'number' and value is not None and value != '':
+                try:
+                    if '.' in value:
+                        value = float(value)
+                    else:
+                        value = int(value)
+                except Exception:
+                    pass
+
+            updated_item[field_name] = value
+
+        # Update the item in the list
+        gearItems[className][item_index] = updated_item
+
+        with open(gearPath, 'w') as f:
+            json.dump(gearItems, f, indent=4)
+
+        print(f"Updated item {item_id} in {className}: {updated_item}")
+        return fl.redirect(fl.url_for('dashboard'))
+
+    # GET -> render form
+    return fl.render_template('edit_gear.html', userClasses=userClasses, gearItems=gearItems)
 
 if __name__ == '__main__':
    # load user classes if file exists
