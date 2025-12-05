@@ -12,24 +12,34 @@ name = "TEMP_USER"
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    #posts
     if fl.request.method == 'POST':
-        #login submit
         if 'submit' in fl.request.form:
             username = fl.request.form.get("username")
             password = fl.request.form.get("password")
             
-            print(username, password)
             if username:
                 fl.session['username'] = username
                 return fl.redirect(fl.url_for('dashboard'))
-    #template
+
     return fl.render_template('login.html')
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
+def home():
+    # Always send first-time visitors to the login page
+    return fl.redirect(fl.url_for('login'))
+
+
+@app.route('/dashboard', methods=['GET'])
 def dashboard():
-    username = fl.session.get('username', 'TEMP_USER')
+    username = fl.session.get('username')
+
+    # If no one is logged in, send user to login page
+    if not username:
+        return fl.redirect(fl.url_for('login'))
+
+    # Otherwise render dashboard
     return fl.render_template('dashboard.html', person=username)
+
 
 @app.route('/create_class', methods=['GET', 'POST'])
 def createClass():
