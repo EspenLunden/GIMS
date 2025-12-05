@@ -1,0 +1,81 @@
+<html>
+    <h1>Create a type of gear</h1>
+
+    <button type="button" onclick="window.location='/'">Back to Home</button>
+    <br><br>
+
+    <body>
+        ID (default)<br>
+        <form method="post" id="gearForm">
+            <input type="text" id="class_name" name="class_name" value="" placeholder="Name for type of gear" required/><br><br>
+            
+            <div id="dynamicFields">
+                <!-- Dynamic fields will be added here -->
+            </div>
+            
+            <button type="button" onclick="addField()">Add Field</button><br><br>
+            <input type="submit" name="submit" value="Submit"/>
+        </form>
+
+        <script>
+            let fieldCount = 0;
+
+            function addField() {
+                const dynamicFields = document.getElementById('dynamicFields');
+                
+                // Create a container for the new field
+                const fieldContainer = document.createElement('div');
+                fieldContainer.style.marginBottom = '10px';
+                fieldContainer.className = 'field-container';
+                fieldContainer.style.display = 'flex';
+                fieldContainer.style.gap = '10px';
+                fieldContainer.style.alignItems = 'center';
+
+                // Create the input for the variable name
+                const variableNameInput = document.createElement('input');
+                variableNameInput.type = 'text';
+                variableNameInput.name = `fields[${fieldCount}][name]`;
+                variableNameInput.placeholder = 'Variable Name';
+                variableNameInput.required = true;
+
+                // Create the dropdown for the variable type
+                const variableTypeSelect = document.createElement('select');
+                variableTypeSelect.name = `fields[${fieldCount}][type]`;
+                variableTypeSelect.required = true;
+
+                // Add options to the dropdown
+                const types = ['text', 'number', 'date', 'boolean'];
+                types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+                    variableTypeSelect.appendChild(option);
+                });
+
+                // Create delete button
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.textContent = '✕';
+                deleteButton.style.padding = '5px 10px';
+                deleteButton.style.backgroundColor = '#ff4444';
+                deleteButton.style.color = 'white';
+                deleteButton.style.border = 'none';
+                deleteButton.style.borderRadius = '4px';
+                deleteButton.style.cursor = 'pointer';
+                deleteButton.style.fontSize = '16px';
+                deleteButton.onclick = () => fieldContainer.remove();
+
+                // Append the input, dropdown, and delete button to the container
+                fieldContainer.appendChild(variableNameInput);
+                fieldContainer.appendChild(variableTypeSelect);
+                fieldContainer.appendChild(deleteButton);
+
+                // Append the container to the dynamic fields section
+                dynamicFields.appendChild(fieldContainer);
+
+                // Increment the field count
+                fieldCount++;
+            }
+        </script>
+    </body>
+</html>
