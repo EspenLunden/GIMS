@@ -1,0 +1,92 @@
+<html>
+    <h1>Add a piece of gear</h1>
+
+    <button type="button" onclick="window.location='/dashboard'">Back to Home</button>
+    <br><br>
+
+    <body>
+        <form method="post" id="addGearForm">
+            <label for="classSelect">Choose a class:</label><br>
+            <select name="class_name" id="classSelect" onchange="renderFields(this.value)">
+                <option value="">-- Select --</option>
+                {% for cname in userClasses.keys() %}
+                    <option value="{{ cname }}">{{ cname }}</option>
+                {% endfor %}
+            </select>
+
+            <div id="classFields" style="margin-top: 16px;">
+                <!-- fields will be injected here -->
+            </div>
+
+            <br>
+            <input type="submit" value="Add Item"/>
+        </form>
+
+        <script>
+            const classDefs = JSON.parse('{{ userClasses | tojson | safe }}');
+
+            function renderFields(className) {
+                const container = document.getElementById('classFields');
+                container.innerHTML = '';
+                if (!className || !(className in classDefs)) return;
+
+                const fields = classDefs[className].fields || [];
+
+                fields.forEach((f, i) => {
+                    const label = document.createElement('label');
+                    label.textContent = f.name + ' (' + f.type + ')';
+                    label.htmlFor = `field_${i}`;
+                    container.appendChild(label);
+
+                    // hidden field to carry the real field name to the server
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = `fieldname_${i}`;
+                    hidden.value = f.name;
+                    container.appendChild(hidden);
+
+                    let input;
+                    if (f.type === 'boolean') {
+                        input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                    } else if (f.type === 'number') {
+                        input = document.createElement('input');
+                        input.type = 'number';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                        input.required = true;
+                    } else if (f.type === 'date') {
+                        input = document.createElement('input');
+                        input.type = 'date';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                        input.required = true;
+                    } else {
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                        input.required = true;
+                    }
+
+                    container.appendChild(document.createElement('br'));
+                    container.appendChild(input);
+                    container.appendChild(document.createElement('br'));
+                    container.appendChild(document.createElement('br'));
+                });
+            }
+
+            // pre-select first class if available
+            document.addEventListener('DOMContentLoaded', () => {
+                const sel = document.getElementById('classSelect');
+                if (sel.options.length > 1) {
+                    // select second option (first is placeholder)
+                    sel.selectedIndex = 1;
+                    renderFields(sel.value);
+                }
+            });
+        </script>
+    </body>
+</html>
