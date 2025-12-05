@@ -248,6 +248,19 @@ def editGear():
     # GET -> render form
     return fl.render_template('edit_gear.html', userClasses=userClasses, gearItems=gearItems)
 
+@app.route('/view_gear', methods=['GET'])
+def view_gear():
+    # Load gear items from file
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+
+    # gearItems is expected to be: { "ClassName": [ {item1}, {item2}, ... ], ... }
+    return fl.render_template('view_gear.html', gearItems=gearItems)
+    
+
 if __name__ == '__main__':
    # load user classes if file exists
     if os.path.exists(classPath) and os.path.getsize(classPath) > 0:
