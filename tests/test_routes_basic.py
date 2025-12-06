@@ -155,3 +155,58 @@ def test_add_gear_creates_item_with_auto_id(client, tmp_path, monkeypatch):
     assert len(items) == 1
     assert items[0]["ID"] == 1
     assert items[0]["Size"] == "M"
+
+# Edit Gear Tests
+
+def test_edit_gear_updates_existing_item(client, tmp_path, monkeypatch):
+    """
+    POST /edit_gear should update an existing item in gear_items.json.
+    """
+    # Point to temporary files
+    tmp_class_path = tmp_path / "user_classes.json"
+    tmp_gear_path = tmp_path / "gear_items.json"
+    monkeypatch.setattr(app_module, "classPath", str(tmp_class_path), raising=False)
+    monkeypatch.setattr(app_module, "gearPath", str(tmp_gear_path), raising=False)
+
+    # Set up class definition in memory
+    app_module.userClasses = {
+        "Helmet": {
+            "fields": [
+                {"name": "ID", "type": "number"},
+                {"name": "Size", "type": "text"},
+            ]
+        }
+    }
+
+    # Existing gear item in JSON
+    initial_gear = {
+        "Helmet": [
+            {"ID": 1, "Size": "M"},
+        ]
+    }
+    tmp_gear_path.write_text(json.dumps(initial_gear))
+
+    # Submit edit form to change Size from M to L
+    response = client.post(
+        "/edit_gear",
+        data={
+            "class_name": "Helmet",
+            "item_id": "1",
+            # fields must match order in userClasses
+            "fieldname_0": "ID",
+            "field_0": "1",
+            "fieldname_1": "Size",
+            "field_1": "L",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302  # redirects to dashboard
+
+    # Verify item was updated in JSON
+    data = json.loads(tmp_gear_path.read_text())
+    items = data["Helmet"]
+    assert len(items) == 1
+    assert items[0]["ID"] == 1
+    assert items[0]["Size"] == "L"
+
