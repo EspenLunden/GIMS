@@ -1,0 +1,27 @@
+<html>
+    <h1>Search Gear</h1>
+
+    <button type="button" onclick="window.location='/dashboard'">Back to Home</button>
+    <br><br>
+
+    <form method="post">
+        <label for="query">Keyword:</label>
+        <input type="text" id="query" name="query" value="{{ query }}" placeholder="any field" />
+        <input type="submit" value="Search" />
+    </form>
+
+    <br>
+    {% if results %}
+        <table border="1" cellpadding="4" cellspacing="0">
+            <tr><th>Class</th><th>Item</th></tr>
+            {% for row in results %}
+                <tr>
+                    <td>{{ row.class }}</td>
+                    <td><pre style="margin:0; white-space: pre-wrap;">{{ row.item | tojson(indent=2) }}</pre></td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% elif query %}
+        <p>No results found.</p>
+    {% endif %}
+</html>
