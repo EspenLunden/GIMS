@@ -248,6 +248,162 @@ def editGear():
     # GET -> render form
     return fl.render_template('edit_gear.html', userClasses=userClasses, gearItems=gearItems)
 
+@app.route('/view_items', methods=['GET'])
+def view_items():
+    """Display all gear items grouped by class (simple HTML, no external template)."""
+    # Load existing gear items from JSON
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+
+    # Optional: allow filtering by class via ?class_name=Helmet
+    class_name_filter = fl.request.args.get("class_name")
+
+    html_parts = []
+    html_parts.append("<!DOCTYPE html>")
+    html_parts.append("<html><head><meta charset='UTF-8'><title>View Gear Items</title></head><body>")
+    html_parts.append("<h1>View Gear Items</h1>")
+    html_parts.append(
+        "<button type='button' onclick=\"window.location='/dashboard'\">Back to Home</button><br><br>"
+    )
+
+    if not gearItems:
+        html_parts.append("<p>No gear items found yet.</p>")
+    else:
+        for class_name, items in gearItems.items():
+            # If a specific class_name is requested, skip others
+            if class_name_filter and class_name != class_name_filter:
+                continue
+
+            html_parts.append(f"<h2>{class_name}</h2>")
+
+            if not items:
+                html_parts.append("<p>No items for this class yet.</p>")
+                continue
+
+            # Build a simple table
+            html_parts.append("<table border='1' cellpadding='4' cellspacing='0'>")
+
+            # Header row from keys of first item
+            first_item = items[0]
+            html_parts.append("<tr>")
+            for key in first_item.keys():
+                html_parts.append(f"<th>{key}</th>")
+            html_parts.append("</tr>")
+
+            # Data rows
+            for item in items:
+                html_parts.append("<tr>")
+                for value in item.values():
+                    html_parts.append(f"<td>{value}</td>")
+                html_parts.append("</tr>")
+
+            html_parts.append("</table><br>")
+
+    html_parts.append("</body></html>")
+    return "".join(html_parts)
+
+
+
+
+@app.route('/search_gear', methods=['GET', 'POST'])
+def searchGear():
+    # Always re-read so searches include the latest changes
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+
+    query = ''
+    results = []
+
+    if fl.request.method == 'POST':
+        query = (fl.request.form.get('query') or '').strip().lower()
+        for cname, items in gearItems.items():
+            for item in items:
+                # Match if the term shows up in any value
+                if not query or any(query in str(val).lower() for val in item.values()):
+                    results.append({"class": cname, "item": item})
+
+    return fl.render_template('search_gear.html', results=results, query=query)
+
+
+@app.route('/delete_gear', methods=['GET', 'POST'])
+def deleteGear():
+    # Fresh read keeps deletes in sync with what the user just saw
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+
+    if fl.request.method == 'POST':
+        className = fl.request.form.get('class_name')
+        item_id = fl.request.form.get('item_id')
+
+        if className and item_id and className in gearItems:
+            items = gearItems.get(className, [])
+            # Drop the requested ID if it exists
+            new_items = [it for it in items if str(it.get('ID')) != str(item_id)]
+
+            if len(new_items) != len(items):
+                # Only write when something actually changed
+                gearItems[className] = new_items
+                with open(gearPath, 'w') as f:
+                    json.dump(gearItems, f, indent=4)
+                print(f"Deleted item {item_id} from {className}")
+                return fl.redirect(fl.url_for('dashboard'))
+
+        print('Invalid delete request')
+        return fl.redirect(fl.url_for('deleteGear'))
+
+    return fl.render_template('delete_gear.html')
+
+
+@app.route('/checkout_gear', methods=['GET', 'POST'])
+def checkoutGear():
+    # Pull the latest data before deciding if something is available
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+
+    if fl.request.method == 'POST':
+        className = fl.request.form.get('class_name')
+        item_id = fl.request.form.get('item_id')
+        borrower = fl.request.form.get('borrower') or 'Unknown'
+        due_date = fl.request.form.get('due_date') or ''
+
+        # Need class, id, and a record of who took it
+        if className and item_id and className in gearItems:
+            for item in gearItems.get(className, []):
+                if str(item.get('ID')) == str(item_id):
+                    # Stop double-booking
+                    if item.get('is_checked_out'):
+                        print('Item already checked out')
+                        return fl.redirect(fl.url_for('checkoutGear'))
+
+                    # Mark that this item is out and who has it
+                    item['is_checked_out'] = True
+                    item['checked_out_by'] = borrower
+                    item['due_date'] = due_date
+
+                    # Persist the update
+                    with open(gearPath, 'w') as f:
+                        json.dump(gearItems, f, indent=4)
+
+                    print(f"Checked out item {item_id} in {className} to {borrower}")
+                    return fl.redirect(fl.url_for('dashboard'))
+
+        print('Invalid checkout request')
+        return fl.redirect(fl.url_for('checkoutGear'))
+
+    return fl.render_template('checkout_gear.html')
+
 @app.route('/view_gear', methods=['GET'])
 def view_gear():
     # Load gear items from file
