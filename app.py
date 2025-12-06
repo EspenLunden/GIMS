@@ -248,6 +248,65 @@ def editGear():
     # GET -> render form
     return fl.render_template('edit_gear.html', userClasses=userClasses, gearItems=gearItems)
 
+@app.route('/view_items', methods=['GET'])
+def view_items():
+    """Display all gear items grouped by class (simple HTML, no external template)."""
+    # Load existing gear items from JSON
+    if os.path.exists(gearPath) and os.path.getsize(gearPath) > 0:
+        with open(gearPath, 'r') as f:
+            gearItems = json.load(f)
+    else:
+        gearItems = {}
+
+    # Optional: allow filtering by class via ?class_name=Helmet
+    class_name_filter = fl.request.args.get("class_name")
+
+    html_parts = []
+    html_parts.append("<!DOCTYPE html>")
+    html_parts.append("<html><head><meta charset='UTF-8'><title>View Gear Items</title></head><body>")
+    html_parts.append("<h1>View Gear Items</h1>")
+    html_parts.append(
+        "<button type='button' onclick=\"window.location='/dashboard'\">Back to Home</button><br><br>"
+    )
+
+    if not gearItems:
+        html_parts.append("<p>No gear items found yet.</p>")
+    else:
+        for class_name, items in gearItems.items():
+            # If a specific class_name is requested, skip others
+            if class_name_filter and class_name != class_name_filter:
+                continue
+
+            html_parts.append(f"<h2>{class_name}</h2>")
+
+            if not items:
+                html_parts.append("<p>No items for this class yet.</p>")
+                continue
+
+            # Build a simple table
+            html_parts.append("<table border='1' cellpadding='4' cellspacing='0'>")
+
+            # Header row from keys of first item
+            first_item = items[0]
+            html_parts.append("<tr>")
+            for key in first_item.keys():
+                html_parts.append(f"<th>{key}</th>")
+            html_parts.append("</tr>")
+
+            # Data rows
+            for item in items:
+                html_parts.append("<tr>")
+                for value in item.values():
+                    html_parts.append(f"<td>{value}</td>")
+                html_parts.append("</tr>")
+
+            html_parts.append("</table><br>")
+
+    html_parts.append("</body></html>")
+    return "".join(html_parts)
+
+
+
 
 @app.route('/search_gear', methods=['GET', 'POST'])
 def searchGear():

@@ -210,3 +210,33 @@ def test_edit_gear_updates_existing_item(client, tmp_path, monkeypatch):
     assert items[0]["ID"] == 1
     assert items[0]["Size"] == "L"
 
+# view items test
+
+def test_view_items_displays_items_for_class(client, tmp_path, monkeypatch):
+    """
+    GET /view_items?class_name=Helmet should render a page containing that class's items.
+    """
+    # Point to temporary gear JSON
+    tmp_gear_path = tmp_path / "gear_items.json"
+    monkeypatch.setattr(app_module, "gearPath", str(tmp_gear_path), raising=False)
+
+    # Create some sample items
+    gear_data = {
+        "Helmet": [
+            {"ID": 1, "Size": "M"},
+            {"ID": 2, "Size": "L"},
+        ]
+    }
+    tmp_gear_path.write_text(json.dumps(gear_data))
+
+    # Request items for Helmet
+    response = client.get("/view_items?class_name=Helmet", follow_redirects=False)
+    assert response.status_code == 200
+
+    # Check that the HTML includes the class name and some item values
+    html = response.data.decode("utf-8")
+    assert "Helmet" in html
+    assert "1" in html
+    assert "M" in html
+    assert "2" in html
+    assert "L" in html

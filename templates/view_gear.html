@@ -1,39 +1,43 @@
-<html>
-    <head>
-        <title>View Gear Items</title>
-    </head>
-    <body>
-        <h1>View Gear Items</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Gear Items</title>
+</head>
+<body>
+    <h1>View Gear Items</h1>
 
-       <button type="button" onclick="window.location='/dashboard'">Back to Home</button>
-        <br><br>
+    <button type="button" onclick="window.location='{{ url_for('dashboard') }}'">
+        Back to Home
+    </button>
+    <br><br>
 
-        {% if not gearItems %}
-            <p>No gear items found yet.</p>
-        {% else %}
-            {% for class_name, items in gearItems.items() %}
-                <h2>{{ class_name }}</h2>
+    {% if not gearItems %}
+        <p>No gear items found yet.</p>
+    {% else %}
+        {% for class_name_key, items in gearItems.items() %}
+            <h2>{{ class_name_key }}</h2>
 
-                {% if items %}
-                    <table border="1" cellpadding="4" cellspacing="0">
+            {% if items %}
+                <table border="1" cellpadding="4" cellspacing="0">
+                    <tr>
+                        {% for key in items[0].keys() %}
+                            <th>{{ key }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% for item in items %}
                         <tr>
-                            {% for key in items[0].keys() %}
-                                <th>{{ key }}</th>
+                            {% for value in item.values() %}
+                                <td>{{ value }}</td>
                             {% endfor %}
                         </tr>
-                        {% for item in items %}
-                            <tr>
-                                {% for value in item.values() %}
-                                    <td>{{ value }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                    </table>
-                {% else %}
-                    <p>No items for this class yet.</p>
-                {% endif %}
-                <br>
-            {% endfor %}
-        {% endif %}
-    </body>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>No items for this class yet.</p>
+            {% endif %}
+            <br>
+        {% endfor %}
+    {% endif %}
+</body>
 </html>
