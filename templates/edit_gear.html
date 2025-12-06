@@ -1,0 +1,134 @@
+<html>
+    <h1>Edit a piece of gear</h1>
+
+    <button type="button" onclick="window.location='/dashboard'">Back to Home</button>
+    <br><br>
+
+    <body>
+        <label for="classSelect">Choose a class:</label><br>
+        <select name="class_name" id="classSelect" onchange="loadItems(this.value)">
+            <option value="">-- Select --</option>
+            {% for cname in userClasses.keys() %}
+                <option value="{{ cname }}">{{ cname }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+
+        <div id="itemsContainer" style="display:none;">
+            <label for="itemSelect">Choose an item to edit:</label><br>
+            <select id="itemSelect" onchange="loadItemFields(this.value)">
+                <option value="">-- Select --</option>
+            </select>
+            <br><br>
+
+            <form method="post" id="editGearForm">
+                <input type="hidden" name="class_name" id="hiddenClassName"/>
+                <input type="hidden" name="item_id" id="hiddenItemId"/>
+
+                <div id="classFields" style="margin-top: 16px;">
+                    <!-- fields will be injected here -->
+                </div>
+
+                <br>
+                <input type="submit" value="Update Item"/>
+            </form>
+        </div>
+
+        <script>
+            const classDefs = JSON.parse('{{ userClasses | tojson | safe }}');
+            const allItems = JSON.parse('{{ gearItems | tojson | safe }}');
+
+            function loadItems(className) {
+                const itemSelect = document.getElementById('itemSelect');
+                const container = document.getElementById('itemsContainer');
+                itemSelect.innerHTML = '<option value="">-- Select --</option>';
+                document.getElementById('classFields').innerHTML = '';
+
+                if (!className || !(className in allItems)) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                const items = allItems[className] || [];
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.ID;
+                    option.textContent = `ID: ${item.ID}`;
+                    itemSelect.appendChild(option);
+                });
+
+                container.style.display = 'block';
+                document.getElementById('hiddenClassName').value = className;
+            }
+
+            function loadItemFields(itemId) {
+                const className = document.getElementById('classSelect').value;
+                const itemSelect = document.getElementById('itemSelect');
+                const container = document.getElementById('classFields');
+                container.innerHTML = '';
+
+                if (!itemId || !className || !(className in allItems)) return;
+
+                // Find the item
+                const items = allItems[className] || [];
+                const item = items.find(it => it.ID == itemId);
+                if (!item) return;
+
+                const fields = classDefs[className].fields || [];
+
+                fields.forEach((f, i) => {
+                    const label = document.createElement('label');
+                    label.textContent = f.name + ' (' + f.type + ')';
+                    label.htmlFor = `field_${i}`;
+                    container.appendChild(label);
+
+                    // hidden field to carry the real field name to the server
+                    const hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = `fieldname_${i}`;
+                    hidden.value = f.name;
+                    container.appendChild(hidden);
+
+                    let input;
+                    const currentValue = item[f.name];
+
+                    if (f.type === 'boolean') {
+                        input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                        input.checked = currentValue === true || currentValue === 'true';
+                    } else if (f.type === 'number') {
+                        input = document.createElement('input');
+                        input.type = 'number';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                        input.value = currentValue || '';
+                        if (f.name !== 'ID') input.required = true;
+                    } else if (f.type === 'date') {
+                        input = document.createElement('input');
+                        input.type = 'date';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                        input.value = currentValue || '';
+                        input.required = true;
+                    } else {
+                        input = document.createElement('input');
+                        input.type = 'text';
+                        input.name = `field_${i}`;
+                        input.id = `field_${i}`;
+                        input.value = currentValue || '';
+                        if (f.name !== 'ID') input.required = true;
+                    }
+
+                    container.appendChild(document.createElement('br'));
+                    container.appendChild(input);
+                    container.appendChild(document.createElement('br'));
+                    container.appendChild(document.createElement('br'));
+                });
+
+                document.getElementById('hiddenItemId').value = itemId;
+            }
+        </script>
+    </body>
+</html>
