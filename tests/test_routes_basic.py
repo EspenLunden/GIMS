@@ -4,6 +4,7 @@
 import os
 import sys
 import pytest
+import json
 
 # --- Make sure Python can see app.py in the project root ---
 
@@ -13,7 +14,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, os.pardir))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from app import app as flask_app  # this expects app.py in the project root
+from app import app as flask_app     
+import app as app_module   
 
 @pytest.fixture
 def client():
